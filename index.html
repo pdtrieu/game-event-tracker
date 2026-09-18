@@ -23,6 +23,12 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
         body { background-color: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; }
+        
+        /* Custom scrollbar for dropdowns */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #0f172a; }
+        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #475569; }
     </style>
 </head>
 <body class="min-h-screen bg-dark-900 text-slate-100 p-4 md:p-8">
@@ -57,12 +63,22 @@
         <!-- Filters & Event Counter -->
         <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 bg-dark-800/60 p-4 rounded-xl border border-dark-700">
             <div class="flex flex-wrap gap-4 items-center">
-                <div class="flex items-center gap-2">
+                
+                <!-- Multi-select Game Filter -->
+                <div class="flex items-center gap-2 relative">
                     <span class="text-sm text-slate-400 font-medium">Game:</span>
-                    <select id="filterGame" onchange="render()" class="bg-dark-900 border border-dark-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-indigo-500">
-                        <option value="All">All</option>
-                    </select>
+                    <button id="gameFilterBtn" onclick="toggleGameDropdown(event)" class="bg-dark-900 border border-dark-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-indigo-500 flex items-center justify-between min-w-[140px]">
+                        <span id="gameFilterText">All Games</span>
+                        <i data-lucide="chevron-down" class="w-4 h-4 ml-2 text-slate-500"></i>
+                    </button>
+                    <!-- Dropdown Panel -->
+                    <div id="gameDropdown" class="hidden absolute top-full left-12 mt-1 w-56 bg-dark-800 border border-dark-700 rounded-xl shadow-2xl z-40 p-2 max-h-60 overflow-y-auto">
+                        <div id="gameCheckboxList" class="flex flex-col gap-1">
+                            <!-- Checkboxes injected here -->
+                        </div>
+                    </div>
                 </div>
+
                 <div class="flex items-center gap-2">
                     <span class="text-sm text-slate-400 font-medium">Category:</span>
                     <select id="filterCategory" onchange="render()" class="bg-dark-900 border border-dark-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-indigo-500">
@@ -128,24 +144,24 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Theme Color Palette</label>
-                    <!-- Google Docs style color grid -->
+                    <!-- Rainbow Ordered Palette -->
                     <div class="bg-dark-900 p-2.5 rounded-xl border border-dark-700 mb-3 grid grid-cols-6 gap-2">
-                        <button type="button" onclick="setPresetColor('#ef4444')" class="w-full h-7 rounded-md bg-red-500 hover:scale-105 transition border border-white/25"></button>
-                        <button type="button" onclick="setPresetColor('#f97316')" class="w-full h-7 rounded-md bg-orange-500 hover:scale-105 transition border border-white/25"></button>
-                        <button type="button" onclick="setPresetColor('#f59e0b')" class="w-full h-7 rounded-md bg-amber-500 hover:scale-105 transition border border-white/25"></button>
-                        <button type="button" onclick="setPresetColor('#10b981')" class="w-full h-7 rounded-md bg-emerald-500 hover:scale-105 transition border border-white/25"></button>
-                        <button type="button" onclick="setPresetColor('#06b6d4')" class="w-full h-7 rounded-md bg-cyan-500 hover:scale-105 transition border border-white/25"></button>
-                        <button type="button" onclick="setPresetColor('#3b82f6')" class="w-full h-7 rounded-md bg-blue-500 hover:scale-105 transition border border-white/25"></button>
-                        <button type="button" onclick="setPresetColor('#6366f1')" class="w-full h-7 rounded-md bg-indigo-500 hover:scale-105 transition border border-white/25"></button>
-                        <button type="button" onclick="setPresetColor('#a855f7')" class="w-full h-7 rounded-md bg-purple-500 hover:scale-105 transition border border-white/25"></button>
-                        <button type="button" onclick="setPresetColor('#ec4899')" class="w-full h-7 rounded-md bg-pink-500 hover:scale-105 transition border border-white/25"></button>
-                        <button type="button" onclick="setPresetColor('#64748b')" class="w-full h-7 rounded-md bg-slate-500 hover:scale-105 transition border border-white/25"></button>
-                        <button type="button" onclick="setPresetColor('#e11d48')" class="w-full h-7 rounded-md bg-rose-600 hover:scale-105 transition border border-white/25"></button>
-                        <button type="button" onclick="setPresetColor('#14b8a6')" class="w-full h-7 rounded-md bg-teal-500 hover:scale-105 transition border border-white/25"></button>
+                        <button type="button" onclick="setPresetColor('#ef4444')" class="w-full h-7 rounded-md bg-red-500 hover:scale-105 transition border border-white/25" title="Red"></button>
+                        <button type="button" onclick="setPresetColor('#f97316')" class="w-full h-7 rounded-md bg-orange-500 hover:scale-105 transition border border-white/25" title="Orange"></button>
+                        <button type="button" onclick="setPresetColor('#f59e0b')" class="w-full h-7 rounded-md bg-amber-500 hover:scale-105 transition border border-white/25" title="Amber"></button>
+                        <button type="button" onclick="setPresetColor('#10b981')" class="w-full h-7 rounded-md bg-emerald-500 hover:scale-105 transition border border-white/25" title="Emerald"></button>
+                        <button type="button" onclick="setPresetColor('#14b8a6')" class="w-full h-7 rounded-md bg-teal-500 hover:scale-105 transition border border-white/25" title="Teal"></button>
+                        <button type="button" onclick="setPresetColor('#06b6d4')" class="w-full h-7 rounded-md bg-cyan-500 hover:scale-105 transition border border-white/25" title="Cyan"></button>
+                        <button type="button" onclick="setPresetColor('#3b82f6')" class="w-full h-7 rounded-md bg-blue-500 hover:scale-105 transition border border-white/25" title="Blue"></button>
+                        <button type="button" onclick="setPresetColor('#6366f1')" class="w-full h-7 rounded-md bg-indigo-500 hover:scale-105 transition border border-white/25" title="Indigo"></button>
+                        <button type="button" onclick="setPresetColor('#a855f7')" class="w-full h-7 rounded-md bg-purple-500 hover:scale-105 transition border border-white/25" title="Purple"></button>
+                        <button type="button" onclick="setPresetColor('#d946ef')" class="w-full h-7 rounded-md bg-fuchsia-500 hover:scale-105 transition border border-white/25" title="Fuchsia"></button>
+                        <button type="button" onclick="setPresetColor('#ec4899')" class="w-full h-7 rounded-md bg-pink-500 hover:scale-105 transition border border-white/25" title="Pink"></button>
+                        <button type="button" onclick="setPresetColor('#e11d48')" class="w-full h-7 rounded-md bg-rose-600 hover:scale-105 transition border border-white/25" title="Rose"></button>
                     </div>
                     <div class="flex items-center gap-3">
-                        <input type="color" id="inputColor" value="#6366f1" class="w-12 h-10 bg-dark-900 border border-dark-700 rounded-lg cursor-pointer p-1">
-                        <span id="colorHex" class="text-sm font-mono text-slate-300">#6366f1</span>
+                        <input type="color" id="inputColor" value="#ef4444" class="w-12 h-10 bg-dark-900 border border-dark-700 rounded-lg cursor-pointer p-1">
+                        <span id="colorHex" class="text-sm font-mono text-slate-300">#ef4444</span>
                     </div>
                 </div>
                 <div class="flex justify-end gap-3 pt-4">
@@ -174,32 +190,19 @@
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        const INITIAL_EVENTS = [
-            { id: '1', game: 'Apex Legends', title: 'Season Split Battle Pass', category: 'Battle Pass', startDate: '2026-06-01T10:00', endDate: '2026-10-01T23:59', color: '#ef4444', order: 0 },
-            { id: '2', game: 'Rainbow Six Siege', title: '3v3 Arcade LTM', category: 'Event', startDate: '2026-09-10T14:00', endDate: '2026-09-25T14:00', color: '#3b82f6', order: 1 },
-            { id: '3', game: 'Dead by Daylight', title: '2v8 Chaos Mode', category: 'Event', startDate: '2026-09-15T11:00', endDate: '2026-09-30T23:59', color: '#a855f7', order: 2 },
-            { id: '4', game: 'Sea of Thieves', title: 'Community Weekend', category: 'Event', startDate: '2026-09-26T00:00', endDate: '2026-09-28T23:59', color: '#10b981', order: 3 }
-        ];
-
         window.events = [];
         window.currentView = 'timers';
         window.currentDate = new Date();
+        window.selectedGames = new Set(); // Empty means 'All Games'
 
         const colRef = collection(db, 'droptracker_events');
-
-        getDocs(colRef).then(async (snapshot) => {
-            if (snapshot.empty) {
-                for (let ev of INITIAL_EVENTS) {
-                    await setDoc(doc(db, 'droptracker_events', ev.id), ev);
-                }
-            }
-        }).catch(err => console.error("Seed error:", err));
 
         onSnapshot(colRef, (snapshot) => {
             const loaded = [];
             snapshot.forEach((docSnap) => {
                 loaded.push({ id: docSnap.id, ...docSnap.data() });
             });
+            // Sort primarily by order property
             loaded.sort((a, b) => (a.order || 0) - (b.order || 0));
             window.events = loaded;
             updateGameDropdown();
@@ -209,6 +212,87 @@
             console.error("Firestore error:", error);
             document.getElementById('syncStatus').innerText = 'Sync Error 🔴';
         });
+
+        // Click outside dropdown to close
+        document.addEventListener('click', (e) => {
+            const dropdown = document.getElementById('gameDropdown');
+            const btn = document.getElementById('gameFilterBtn');
+            if (dropdown && !dropdown.classList.contains('hidden')) {
+                if (!dropdown.contains(e.target) && !btn.contains(e.target)) {
+                    dropdown.classList.add('hidden');
+                }
+            }
+        });
+
+        window.toggleGameDropdown = function(e) {
+            e.stopPropagation();
+            const dropdown = document.getElementById('gameDropdown');
+            dropdown.classList.toggle('hidden');
+        }
+
+        window.toggleGameSelection = function(game) {
+            if (game === 'ALL') {
+                window.selectedGames.clear();
+            } else {
+                if (window.selectedGames.has(game)) {
+                    window.selectedGames.delete(game);
+                } else {
+                    window.selectedGames.add(game);
+                }
+            }
+            updateGameDropdownUI();
+            render();
+        }
+
+        function updateGameDropdown() {
+            const games = [...new Set(window.events.map(e => e.game))].sort();
+            
+            // Clean up missing games from set
+            const validGames = new Set(games);
+            for (let g of window.selectedGames) {
+                if (!validGames.has(g)) window.selectedGames.delete(g);
+            }
+            
+            let html = `
+                <label class="flex items-center gap-2 p-2 hover:bg-dark-700 rounded-lg cursor-pointer transition">
+                    <input type="checkbox" ${window.selectedGames.size === 0 ? 'checked' : ''} onchange="toggleGameSelection('ALL')" class="rounded border-dark-600 bg-dark-900 text-indigo-500 focus:ring-indigo-500 w-4 h-4">
+                    <span class="text-sm font-medium text-slate-200">All Games</span>
+                </label>
+                <div class="h-px bg-dark-700 my-1"></div>
+            `;
+
+            games.forEach(g => {
+                html += `
+                <label class="flex items-center gap-2 p-2 hover:bg-dark-700 rounded-lg cursor-pointer transition">
+                    <input type="checkbox" ${window.selectedGames.has(g) ? 'checked' : ''} onchange="toggleGameSelection('${g}')" class="rounded border-dark-600 bg-dark-900 text-indigo-500 focus:ring-indigo-500 w-4 h-4">
+                    <span class="text-sm text-slate-300 truncate">${g}</span>
+                </label>`;
+            });
+
+            document.getElementById('gameCheckboxList').innerHTML = html;
+            updateGameDropdownUI();
+        }
+
+        function updateGameDropdownUI() {
+            const btnText = document.getElementById('gameFilterText');
+            if (window.selectedGames.size === 0) {
+                btnText.innerText = "All Games";
+            } else if (window.selectedGames.size === 1) {
+                btnText.innerText = [...window.selectedGames][0];
+            } else {
+                btnText.innerText = `${window.selectedGames.size} Games Selected`;
+            }
+
+            // Sync checkbox states visually
+            const checkboxes = document.querySelectorAll('#gameCheckboxList input[type="checkbox"]');
+            if(checkboxes.length > 0) {
+                checkboxes[0].checked = window.selectedGames.size === 0;
+                const games = [...new Set(window.events.map(e => e.game))].sort();
+                games.forEach((g, idx) => {
+                    if(checkboxes[idx + 1]) checkboxes[idx + 1].checked = window.selectedGames.has(g);
+                });
+            }
+        }
 
         window.switchView = function(view) {
             window.currentView = view;
@@ -234,15 +318,15 @@
                     document.getElementById('inputCategory').value = ev.category;
                     document.getElementById('inputStart').value = ev.startDate;
                     document.getElementById('inputEnd').value = ev.endDate;
-                    document.getElementById('inputColor').value = ev.color;
-                    document.getElementById('colorHex').innerText = ev.color;
+                    document.getElementById('inputColor').value = ev.color || '#ef4444';
+                    document.getElementById('colorHex').innerText = ev.color || '#ef4444';
                 }
             } else {
                 document.getElementById('modalTitle').innerHTML = '<i data-lucide="calendar-plus" class="w-5 h-5 text-indigo-400"></i> Add New Event';
                 document.getElementById('editEventId').value = '';
                 document.querySelector('form').reset();
-                document.getElementById('inputColor').value = '#6366f1';
-                document.getElementById('colorHex').innerText = '#6366f1';
+                document.getElementById('inputColor').value = '#ef4444';
+                document.getElementById('colorHex').innerText = '#ef4444';
             }
             lucide.createIcons();
         }
@@ -276,7 +360,7 @@
             if (editId) {
                 await updateDoc(doc(db, 'droptracker_events', editId), eventData);
             } else {
-                eventData.order = window.events.length;
+                eventData.order = Date.now(); // Put new items at the end
                 await addDoc(colRef, eventData);
             }
             closeModal();
@@ -286,33 +370,33 @@
             await deleteDoc(doc(db, 'droptracker_events', id));
         }
 
-        window.handleMove = async function(id, direction) {
-            const index = window.events.findIndex(e => e.id === id);
-            const target = direction === 'up' ? index - 1 : index + 1;
-            if (target < 0 || target >= window.events.length) return;
-            
-            const temp = window.events[index].order;
-            window.events[index].order = window.events[target].order;
-            window.events[target].order = temp;
+        // Swaps the order values of two specifically targeted events within their rendered section
+        window.handleSwap = async function(id1, id2) {
+            if (!id2 || id2 === 'null') return;
+            const ev1 = window.events.find(e => e.id === id1);
+            const ev2 = window.events.find(e => e.id === id2);
+            if (!ev1 || !ev2) return;
 
-            await updateDoc(doc(db, 'droptracker_events', window.events[index].id), { order: window.events[index].order });
-            await updateDoc(doc(db, 'droptracker_events', window.events[target].id), { order: window.events[target].order });
+            const temp = ev1.order || 0;
+            ev1.order = ev2.order || 0;
+            ev2.order = temp;
+
+            // Optimistic update
+            render();
+
+            await updateDoc(doc(db, 'droptracker_events', ev1.id), { order: ev1.order });
+            await updateDoc(doc(db, 'droptracker_events', ev2.id), { order: ev2.order });
         }
 
-        function updateGameDropdown() {
-            const select = document.getElementById('filterGame');
-            const currentVal = select.value;
-            const games = [...new Set(window.events.map(e => e.game))];
-            select.innerHTML = '<option value="All">All</option>' + games.map(g => `<option value="${g}">${g}</option>`).join('');
-            select.value = games.includes(currentVal) ? currentVal : 'All';
-        }
-
-        function renderEventCard(ev, idx, filteredLength) {
+        function renderEventCard(ev, i, sectionArray) {
             const now = Date.now();
             const start = new Date(ev.startDate).getTime();
             const end = new Date(ev.endDate).getTime();
             let status = 'Starts In', time = start - now, isLive = false, prog = 0;
-            if (now >= start && now <= end) { status = 'Ends In'; time = end - now; isLive = true; prog = Math.min(100, Math.max(0, ((now - start)/(end - start))*100)); }
+            if (now >= start && now <= end) { 
+                status = 'Ends In'; time = end - now; isLive = true; 
+                prog = Math.min(100, Math.max(0, ((now - start)/(end - start))*100)); 
+            }
             else if (now > end) { status = 'Completed'; time = 0; prog = 100; }
 
             const d = Math.floor(time / 86400000);
@@ -320,8 +404,12 @@
             const m = Math.floor((time % 3600000) / 60000);
             const s = Math.floor((time % 60000) / 1000);
 
+            // Get ids for swapping within the same section display to keep it robust
+            const prevId = i > 0 ? sectionArray[i-1].id : null;
+            const nextId = i < sectionArray.length - 1 ? sectionArray[i+1].id : null;
+
             return `
-            <div class="bg-dark-800 border border-dark-700 rounded-2xl p-5 shadow-xl flex flex-col justify-between" style="border-top: 4px solid ${ev.color}">
+            <div class="bg-dark-800 rounded-2xl p-5 shadow-xl flex flex-col justify-between" style="border: 1px solid ${ev.color}40; border-top: 4px solid ${ev.color};">
                 <div>
                     <div class="flex justify-between items-start mb-3">
                         <div>
@@ -330,8 +418,8 @@
                         </div>
                         <div class="flex items-center gap-1">
                             <div class="flex flex-col">
-                                <button onclick="handleMove('${ev.id}', 'up')" ${idx === 0 ? 'disabled class="opacity-30"' : ''} class="text-slate-500 hover:text-white"><i data-lucide="chevron-up" class="w-4 h-4"></i></button>
-                                <button onclick="handleMove('${ev.id}', 'down')" ${idx === filteredLength - 1 ? 'disabled class="opacity-30"' : ''} class="text-slate-500 hover:text-white"><i data-lucide="chevron-down" class="w-4 h-4"></i></button>
+                                <button onclick="handleSwap('${ev.id}', '${prevId}')" ${!prevId ? 'disabled class="opacity-30"' : 'class="text-slate-500 hover:text-white"'} title="Move Up"><i data-lucide="chevron-up" class="w-4 h-4"></i></button>
+                                <button onclick="handleSwap('${ev.id}', '${nextId}')" ${!nextId ? 'disabled class="opacity-30"' : 'class="text-slate-500 hover:text-white"'} title="Move Down"><i data-lucide="chevron-down" class="w-4 h-4"></i></button>
                             </div>
                             <button onclick="openModal('${ev.id}')" class="text-slate-500 hover:text-indigo-400 p-1.5"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
                             <button onclick="handleDelete('${ev.id}')" class="text-slate-500 hover:text-rose-400 p-1.5"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
@@ -340,7 +428,7 @@
                     <h3 class="text-lg font-bold text-white mb-2">${ev.title}</h3>
                     <div class="bg-dark-900/80 rounded-xl p-3 border border-dark-700/60 my-3">
                         <div class="flex justify-between items-center mb-1">
-                            <span class="text-xs font-semibold uppercase" style="color: ${ev.color}">${status}</span>
+                            <span class="text-xs font-bold uppercase text-slate-400">${status}</span>
                             <span class="text-[10px] px-2 py-0.5 rounded font-bold uppercase ${isLive ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'}">${isLive ? '🟢 Live' : '⏳ Upcoming'}</span>
                         </div>
                         ${now > end ? '<div class="text-sm font-bold text-rose-400 py-1">Event Ended</div>' : `
@@ -353,7 +441,7 @@
                     </div>
                 </div>
                 <div>
-                    <div class="flex justify-between text-[11px] text-slate-400 mb-1"><span>Progress</span><span style="color: ${ev.color}">${Math.round(prog)}%</span></div>
+                    <div class="flex justify-between text-[11px] text-slate-400 mb-1"><span>Progress</span><span class="text-white font-bold">${Math.round(prog)}%</span></div>
                     <div class="w-full bg-dark-900 h-2 rounded-full overflow-hidden border border-dark-700">
                         <div class="h-full" style="width: ${prog}%; background-color: ${ev.color}"></div>
                     </div>
@@ -362,14 +450,13 @@
         }
 
         window.render = function() {
-            const gameFilter = document.getElementById('filterGame').value;
             const catFilter = document.getElementById('filterCategory').value;
             const statusFilter = document.getElementById('filterStatus').value;
 
             const now = Date.now();
 
             const filtered = window.events.filter(e => {
-                const matchGame = gameFilter === 'All' || e.game === gameFilter;
+                const matchGame = window.selectedGames.size === 0 || window.selectedGames.has(e.game);
                 const matchCat = catFilter === 'All' || e.category === catFilter;
                 
                 const isLiveNow = now >= new Date(e.startDate).getTime() && now <= new Date(e.endDate).getTime();
@@ -399,17 +486,17 @@
                     let html = '';
                     if (liveEvents.length > 0) {
                         html += `<div class="mb-8"><h2 class="text-xl font-bold text-emerald-400 mb-4 flex items-center gap-2"><i data-lucide="radio" class="w-5 h-5 animate-pulse"></i> Live Now</h2><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">`;
-                        html += liveEvents.map(ev => renderEventCard(ev, filtered.indexOf(ev), filtered.length)).join('');
+                        html += liveEvents.map((ev, i) => renderEventCard(ev, i, liveEvents)).join('');
                         html += `</div></div>`;
                     }
                     if (upcomingEvents.length > 0) {
                         html += `<div class="mb-8"><h2 class="text-xl font-bold text-amber-400 mb-4 flex items-center gap-2"><i data-lucide="clock" class="w-5 h-5"></i> Upcoming</h2><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">`;
-                        html += upcomingEvents.map(ev => renderEventCard(ev, filtered.indexOf(ev), filtered.length)).join('');
+                        html += upcomingEvents.map((ev, i) => renderEventCard(ev, i, upcomingEvents)).join('');
                         html += `</div></div>`;
                     }
                     if (endedEvents.length > 0) {
                         html += `<div class="mb-8"><h2 class="text-xl font-bold text-slate-400 mb-4 flex items-center gap-2"><i data-lucide="check-circle-2" class="w-5 h-5"></i> Ended</h2><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">`;
-                        html += endedEvents.map(ev => renderEventCard(ev, filtered.indexOf(ev), filtered.length)).join('');
+                        html += endedEvents.map((ev, i) => renderEventCard(ev, i, endedEvents)).join('');
                         html += `</div></div>`;
                     }
                     container.innerHTML = html;
