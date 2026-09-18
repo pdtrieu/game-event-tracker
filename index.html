@@ -13,7 +13,7 @@
             theme: {
                 extend: {
                     colors: {
-                        dark: { 900: '#0f172a', 800: '#1e293b', 700: '#334155', 600: '#475569' }
+                        dark: { 950: '#090d16', 900: '#0f172a', 800: '#1e293b', 700: '#334155', 600: '#475569' }
                     }
                 }
             }
@@ -25,7 +25,7 @@
         body { background-color: #0f172a; color: #f8fafc; font-family: system-ui, -apple-system, sans-serif; }
     </style>
 </head>
-<body class="min-h-screen bg-dark-950 text-slate-100 p-4 md:p-8">
+<body class="min-h-screen bg-dark-900 text-slate-100 p-4 md:p-8">
     <div class="max-w-6xl mx-auto">
         
         <!-- Header -->
@@ -78,23 +78,24 @@
         <div id="mainView"></div>
     </div>
 
-    <!-- Modal -->
+    <!-- Modal (Add / Edit) -->
     <div id="eventModal" class="fixed inset-0 bg-black/70 backdrop-blur-sm hidden items-center justify-center p-4 z-50">
         <div class="bg-dark-800 border border-dark-700 rounded-2xl w-full max-w-md p-6 shadow-2xl">
             <div class="flex justify-between items-center mb-4">
-                <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                <h2 id="modalTitle" class="text-xl font-bold text-white flex items-center gap-2">
                     <i data-lucide="calendar-plus" class="w-5 h-5 text-indigo-400"></i> Add New Event
                 </h2>
                 <button onclick="closeModal()" class="text-slate-400 hover:text-white"><i data-lucide="x" class="w-5 h-5"></i></button>
             </div>
             <form onsubmit="handleSaveEvent(event)" class="space-y-4">
+                <input type="hidden" id="editEventId">
                 <div>
                     <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Game Name</label>
-                    <input type="text" id="inputGame" required placeholder="e.g. Apex Legends" class="w-full bg-dark-900 border border-dark-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500">
+                    <input type="text" id="inputGame" required placeholder="Apex Legends" class="w-full bg-dark-900 border border-dark-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Title</label>
-                    <input type="text" id="inputTitle" required placeholder="e.g. Season Split 2" class="w-full bg-dark-900 border border-dark-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500">
+                    <input type="text" id="inputTitle" required placeholder="Season Split 2" class="w-full bg-dark-900 border border-dark-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500">
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Category</label>
@@ -117,6 +118,14 @@
                 </div>
                 <div>
                     <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Theme Color</label>
+                    <div class="flex items-center gap-3 mb-2">
+                        <button type="button" onclick="setPresetColor('#ef4444')" class="w-6 h-6 rounded-full bg-red-500 hover:scale-110 transition border border-white/20"></button>
+                        <button type="button" onclick="setPresetColor('#3b82f6')" class="w-6 h-6 rounded-full bg-blue-500 hover:scale-110 transition border border-white/20"></button>
+                        <button type="button" onclick="setPresetColor('#10b981')" class="w-6 h-6 rounded-full bg-emerald-500 hover:scale-110 transition border border-white/20"></button>
+                        <button type="button" onclick="setPresetColor('#a855f7')" class="w-6 h-6 rounded-full bg-purple-500 hover:scale-110 transition border border-white/20"></button>
+                        <button type="button" onclick="setPresetColor('#f59e0b')" class="w-6 h-6 rounded-full bg-amber-500 hover:scale-110 transition border border-white/20"></button>
+                        <button type="button" onclick="setPresetColor('#ec4899')" class="w-6 h-6 rounded-full bg-pink-500 hover:scale-110 transition border border-white/20"></button>
+                    </div>
                     <div class="flex items-center gap-3">
                         <input type="color" id="inputColor" value="#6366f1" class="w-12 h-10 bg-dark-900 border border-dark-700 rounded-lg cursor-pointer p-1">
                         <span id="colorHex" class="text-sm font-mono text-slate-300">#6366f1</span>
@@ -195,8 +204,41 @@
             render();
         }
 
-        window.openModal = function() { document.getElementById('eventModal').classList.remove('hidden'); document.getElementById('eventModal').classList.add('flex'); }
-        window.closeModal = function() { document.getElementById('eventModal').classList.remove('flex'); document.getElementById('eventModal').classList.add('hidden'); }
+        window.openModal = function(id = null) {
+            document.getElementById('eventModal').classList.remove('hidden');
+            document.getElementById('eventModal').classList.add('flex');
+            if (id) {
+                const ev = window.events.find(e => e.id === id);
+                if (ev) {
+                    document.getElementById('modalTitle').innerHTML = '<i data-lucide="edit-3" class="w-5 h-5 text-indigo-400"></i> Edit Event';
+                    document.getElementById('editEventId').value = ev.id;
+                    document.getElementById('inputGame').value = ev.game;
+                    document.getElementById('inputTitle').value = ev.title;
+                    document.getElementById('inputCategory').value = ev.category;
+                    document.getElementById('inputStart').value = ev.startDate;
+                    document.getElementById('inputEnd').value = ev.endDate;
+                    document.getElementById('inputColor').value = ev.color;
+                    document.getElementById('colorHex').innerText = ev.color;
+                }
+            } else {
+                document.getElementById('modalTitle').innerHTML = '<i data-lucide="calendar-plus" class="w-5 h-5 text-indigo-400"></i> Add New Event';
+                document.getElementById('editEventId').value = '';
+                document.querySelector('form').reset();
+                document.getElementById('inputColor').value = '#6366f1';
+                document.getElementById('colorHex').innerText = '#6366f1';
+            }
+            lucide.createIcons();
+        }
+
+        window.closeModal = function() { 
+            document.getElementById('eventModal').classList.remove('flex'); 
+            document.getElementById('eventModal').classList.add('hidden'); 
+        }
+
+        window.setPresetColor = function(color) {
+            document.getElementById('inputColor').value = color;
+            document.getElementById('colorHex').innerText = color;
+        }
 
         document.getElementById('inputColor').addEventListener('input', (e) => {
             document.getElementById('colorHex').innerText = e.target.value;
@@ -204,25 +246,31 @@
 
         window.handleSaveEvent = async function(e) {
             e.preventDefault();
-            const newEvent = {
+            const editId = document.getElementById('editEventId').value;
+            const eventData = {
                 game: document.getElementById('inputGame').value,
                 title: document.getElementById('inputTitle').value,
                 category: document.getElementById('inputCategory').value,
                 startDate: document.getElementById('inputStart').value,
                 endDate: document.getElementById('inputEnd').value,
                 color: document.getElementById('inputColor').value,
-                order: window.events.length
             };
-            await addDoc(colRef, newEvent);
+
+            if (editId) {
+                await updateDoc(doc(db, 'droptracker_events', editId), eventData);
+            } else {
+                eventData.order = window.events.length;
+                await addDoc(colRef, eventData);
+            }
             closeModal();
-            e.target.reset();
         }
 
         window.handleDelete = async function(id) {
             await deleteDoc(doc(db, 'droptracker_events', id));
         }
 
-        window.handleMove = async function(index, direction) {
+        window.handleMove = async function(id, direction) {
+            const index = window.events.findIndex(e => e.id === id);
             const target = direction === 'up' ? index - 1 : index + 1;
             if (target < 0 || target >= window.events.length) return;
             
@@ -242,6 +290,60 @@
             select.value = games.includes(currentVal) ? currentVal : 'All';
         }
 
+        function renderEventCard(ev, idx, filteredLength) {
+            const now = Date.now();
+            const start = new Date(ev.startDate).getTime();
+            const end = new Date(ev.endDate).getTime();
+            let status = 'Starts In', time = start - now, isLive = false, prog = 0;
+            if (now >= start && now <= end) { status = 'Ends In'; time = end - now; isLive = true; prog = Math.min(100, Math.max(0, ((now - start)/(end - start))*100)); }
+            else if (now > end) { status = 'Completed'; time = 0; prog = 100; }
+
+            const d = Math.floor(time / 86400000);
+            const h = Math.floor((time % 86400000) / 3600000);
+            const m = Math.floor((time % 3600000) / 60000);
+            const s = Math.floor((time % 60000) / 1000);
+
+            return `
+            <div class="bg-dark-800 border border-dark-700 rounded-2xl p-5 shadow-xl flex flex-col justify-between" style="border-top: 4px solid ${ev.color}">
+                <div>
+                    <div class="flex justify-between items-start mb-3">
+                        <div>
+                            <span class="text-xs font-bold uppercase px-2.5 py-1 rounded-md bg-dark-900 text-slate-300 border border-dark-700">${ev.game}</span>
+                            <span class="text-xs ml-2 text-slate-400 px-2 py-0.5 rounded bg-dark-700/50">${ev.category}</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <div class="flex flex-col">
+                                <button onclick="handleMove('${ev.id}', 'up')" ${idx === 0 ? 'disabled class="opacity-30"' : ''} class="text-slate-500 hover:text-white"><i data-lucide="chevron-up" class="w-4 h-4"></i></button>
+                                <button onclick="handleMove('${ev.id}', 'down')" ${idx === filteredLength - 1 ? 'disabled class="opacity-30"' : ''} class="text-slate-500 hover:text-white"><i data-lucide="chevron-down" class="w-4 h-4"></i></button>
+                            </div>
+                            <button onclick="openModal('${ev.id}')" class="text-slate-500 hover:text-indigo-400 p-1.5"><i data-lucide="edit-3" class="w-4 h-4"></i></button>
+                            <button onclick="handleDelete('${ev.id}')" class="text-slate-500 hover:text-rose-400 p-1.5"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
+                        </div>
+                    </div>
+                    <h3 class="text-lg font-bold text-white mb-2">${ev.title}</h3>
+                    <div class="bg-dark-900/80 rounded-xl p-3 border border-dark-700/60 my-3">
+                        <div class="flex justify-between items-center mb-1">
+                            <span class="text-xs font-semibold uppercase" style="color: ${ev.color}">${status}</span>
+                            <span class="text-[10px] px-2 py-0.5 rounded font-bold uppercase ${isLive ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-amber-500/20 text-amber-400 border border-amber-500/30'}">${isLive ? '🟢 Live' : '⏳ Upcoming'}</span>
+                        </div>
+                        ${now > end ? '<div class="text-sm font-bold text-rose-400 py-1">Event Ended</div>' : `
+                        <div class="grid grid-cols-4 gap-1 text-center font-mono">
+                            <div class="bg-dark-800 p-1.5 rounded-lg border border-dark-700"><div class="text-base font-bold" style="color: ${ev.color}">${d}</div><div class="text-[9px] text-slate-400">Days</div></div>
+                            <div class="bg-dark-800 p-1.5 rounded-lg border border-dark-700"><div class="text-base font-bold" style="color: ${ev.color}">${String(h).padStart(2,'0')}</div><div class="text-[9px] text-slate-400">Hrs</div></div>
+                            <div class="bg-dark-800 p-1.5 rounded-lg border border-dark-700"><div class="text-base font-bold" style="color: ${ev.color}">${String(m).padStart(2,'0')}</div><div class="text-[9px] text-slate-400">Mins</div></div>
+                            <div class="bg-dark-800 p-1.5 rounded-lg border border-dark-700"><div class="text-base font-bold" style="color: ${ev.color}">${String(s).padStart(2,'0')}</div><div class="text-[9px] text-slate-400">Secs</div></div>
+                        </div>`}
+                    </div>
+                </div>
+                <div>
+                    <div class="flex justify-between text-[11px] text-slate-400 mb-1"><span>Progress</span><span>${Math.round(prog)}%</span></div>
+                    <div class="w-full bg-dark-900 h-2 rounded-full overflow-hidden border border-dark-700">
+                        <div class="h-full" style="width: ${prog}%; background-color: ${ev.color}"></div>
+                    </div>
+                </div>
+            </div>`;
+        }
+
         window.render = function() {
             const gameFilter = document.getElementById('filterGame').value;
             const catFilter = document.getElementById('filterCategory').value;
@@ -253,57 +355,28 @@
                 if (filtered.length === 0) {
                     container.innerHTML = `<div class="text-center py-20 bg-dark-800/40 rounded-2xl border border-dark-700"><i data-lucide="gamepad" class="w-12 h-12 text-slate-600 mx-auto mb-3"></i><h3 class="text-lg font-medium text-slate-300">No events found</h3></div>`;
                 } else {
-                    container.innerHTML = `<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">` + filtered.map((ev, idx) => {
-                        const now = Date.now();
-                        const start = new Date(ev.startDate).getTime();
-                        const end = new Date(ev.endDate).getTime();
-                        let status = 'Starts In', time = start - now, isLive = false, prog = 0;
-                        if (now >= start && now <= end) { status = 'Ends In'; time = end - now; isLive = true; prog = Math.min(100, Math.max(0, ((now - start)/(end - start))*100)); }
-                        else if (now > end) { status = 'Completed'; time = 0; prog = 100; }
+                    const now = Date.now();
+                    const liveEvents = filtered.filter(e => now >= new Date(e.startDate).getTime() && now <= new Date(e.endDate).getTime());
+                    const upcomingEvents = filtered.filter(e => now < new Date(e.startDate).getTime());
+                    const endedEvents = filtered.filter(e => now > new Date(e.endDate).getTime());
 
-                        const d = Math.floor(time / 86400000);
-                        const h = Math.floor((time % 86400000) / 3600000);
-                        const m = Math.floor((time % 3600000) / 60000);
-                        const s = Math.floor((time % 60000) / 1000);
-
-                        return `
-                        <div class="bg-dark-800 border border-dark-700 rounded-2xl p-5 shadow-xl flex flex-col justify-between" style="border-top: 4px solid ${ev.color}">
-                            <div>
-                                <div class="flex justify-between items-start mb-3">
-                                    <div>
-                                        <span class="text-xs font-bold uppercase px-2.5 py-1 rounded-md bg-dark-900 text-slate-300 border border-dark-700">${ev.game}</span>
-                                        <span class="text-xs ml-2 text-slate-400 px-2 py-0.5 rounded bg-dark-700/50">${ev.category}</span>
-                                    </div>
-                                    <div class="flex items-center gap-1">
-                                        <div class="flex flex-col">
-                                            <button onclick="handleMove(${idx}, 'up')" ${idx === 0 ? 'disabled class="opacity-30"' : ''} class="text-slate-500 hover:text-white"><i data-lucide="chevron-up" class="w-4 h-4"></i></button>
-                                            <button onclick="handleMove(${idx}, 'down')" ${idx === filtered.length - 1 ? 'disabled class="opacity-30"' : ''} class="text-slate-500 hover:text-white"><i data-lucide="chevron-down" class="w-4 h-4"></i></button>
-                                        </div>
-                                        <button onclick="handleDelete('${ev.id}')" class="text-slate-500 hover:text-rose-400 p-1.5"><i data-lucide="trash-2" class="w-4 h-4"></i></button>
-                                    </div>
-                                </div>
-                                <h3 class="text-lg font-bold text-white mb-2">${ev.title}</h3>
-                                <div class="bg-dark-900/80 rounded-xl p-3 border border-dark-700/60 my-3">
-                                    <div class="flex justify-between items-center mb-1">
-                                        <span class="text-xs font-semibold uppercase ${isLive ? 'text-emerald-400' : 'text-amber-400'}">${status}</span>
-                                    </div>
-                                    ${now > end ? '<div class="text-sm font-bold text-rose-400 py-1">Event Ended</div>' : `
-                                    <div class="grid grid-cols-4 gap-1 text-center font-mono">
-                                        <div class="bg-dark-800 p-1.5 rounded-lg border border-dark-700"><div class="text-base font-bold text-white">${d}</div><div class="text-[9px] text-slate-400">Days</div></div>
-                                        <div class="bg-dark-800 p-1.5 rounded-lg border border-dark-700"><div class="text-base font-bold text-white">${String(h).padStart(2,'0')}</div><div class="text-[9px] text-slate-400">Hrs</div></div>
-                                        <div class="bg-dark-800 p-1.5 rounded-lg border border-dark-700"><div class="text-base font-bold text-white">${String(m).padStart(2,'0')}</div><div class="text-[9px] text-slate-400">Mins</div></div>
-                                        <div class="bg-dark-800 p-1.5 rounded-lg border border-dark-700"><div class="text-base font-bold text-white">${String(s).padStart(2,'0')}</div><div class="text-[9px] text-slate-400">Secs</div></div>
-                                    </div>`}
-                                </div>
-                            </div>
-                            <div>
-                                <div class="flex justify-between text-[11px] text-slate-400 mb-1"><span>Progress</span><span>${Math.round(prog)}%</span></div>
-                                <div class="w-full bg-dark-900 h-2 rounded-full overflow-hidden border border-dark-700">
-                                    <div class="h-full" style="width: ${prog}%; background-color: ${ev.color}"></div>
-                                </div>
-                            </div>
-                        </div>`;
-                    }).join('') + `</div>`;
+                    let html = '';
+                    if (liveEvents.length > 0) {
+                        html += `<div class="mb-8"><h2 class="text-xl font-bold text-emerald-400 mb-4 flex items-center gap-2"><i data-lucide="radio" class="w-5 h-5 animate-pulse"></i> Live Events (${liveEvents.length})</h2><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">`;
+                        html += liveEvents.map(ev => renderEventCard(ev, filtered.indexOf(ev), filtered.length)).join('');
+                        html += `</div></div>`;
+                    }
+                    if (upcomingEvents.length > 0) {
+                        html += `<div class="mb-8"><h2 class="text-xl font-bold text-amber-400 mb-4 flex items-center gap-2"><i data-lucide="clock" class="w-5 h-5"></i> Upcoming Events (${upcomingEvents.length})</h2><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">`;
+                        html += upcomingEvents.map(ev => renderEventCard(ev, filtered.indexOf(ev), filtered.length)).join('');
+                        html += `</div></div>`;
+                    }
+                    if (endedEvents.length > 0) {
+                        html += `<div class="mb-8"><h2 class="text-xl font-bold text-slate-400 mb-4 flex items-center gap-2"><i data-lucide="check-circle-2" class="w-5 h-5"></i> Completed (${endedEvents.length})</h2><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">`;
+                        html += endedEvents.map(ev => renderEventCard(ev, filtered.indexOf(ev), filtered.length)).join('');
+                        html += `</div></div>`;
+                    }
+                    container.innerHTML = html;
                 }
             } else {
                 const year = window.currentDate.getFullYear();
@@ -323,7 +396,7 @@
                     <div class="h-28 bg-dark-900/70 border rounded-xl p-2 flex flex-col overflow-y-auto ${isToday ? 'border-indigo-500 ring-1 ring-indigo-500' : 'border-dark-700'}">
                         <div class="text-right text-xs font-semibold text-slate-400 mb-1">${d}</div>
                         <div class="space-y-1 flex-1">
-                            ${dayEvs.map(ev => `<div class="text-[10px] px-1.5 py-0.5 rounded truncate font-medium text-white shadow" style="background-color: ${ev.color}"><span class="opacity-75">${ev.game}:</span>${ev.title}</div>`).join('')}
+                            ${dayEvs.map(ev => `<div class="text-[10px] px-1.5 py-0.5 rounded truncate font-medium text-white shadow cursor-pointer" onclick="openModal('${ev.id}')" style="background-color: ${ev.color}"><span class="opacity-75">${ev.game}:</span>${ev.title}</div>`).join('')}
                         </div>
                     </div>`;
                 }
