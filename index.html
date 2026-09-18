@@ -54,23 +54,35 @@
             </div>
         </header>
 
-        <!-- Filters -->
-        <div class="flex flex-wrap gap-4 mb-6 bg-dark-800/60 p-4 rounded-xl border border-dark-700">
-            <div class="flex items-center gap-2">
-                <span class="text-sm text-slate-400 font-medium">Game:</span>
-                <select id="filterGame" onchange="render()" class="bg-dark-900 border border-dark-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-indigo-500">
-                    <option value="All">All</option>
-                </select>
+        <!-- Filters & Event Counter -->
+        <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6 bg-dark-800/60 p-4 rounded-xl border border-dark-700">
+            <div class="flex flex-wrap gap-4 items-center">
+                <div class="flex items-center gap-2">
+                    <span class="text-sm text-slate-400 font-medium">Game:</span>
+                    <select id="filterGame" onchange="render()" class="bg-dark-900 border border-dark-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-indigo-500">
+                        <option value="All">All</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-sm text-slate-400 font-medium">Category:</span>
+                    <select id="filterCategory" onchange="render()" class="bg-dark-900 border border-dark-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-indigo-500">
+                        <option value="All">All</option>
+                        <option value="Battle Pass">Battle Pass</option>
+                        <option value="Event">Event</option>
+                    </select>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-sm text-slate-400 font-medium">Status:</span>
+                    <select id="filterStatus" onchange="render()" class="bg-dark-900 border border-dark-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-indigo-500">
+                        <option value="All">All</option>
+                        <option value="Live">Live Now</option>
+                        <option value="Upcoming">Upcoming</option>
+                        <option value="Ended">Ended</option>
+                    </select>
+                </div>
             </div>
-            <div class="flex items-center gap-2">
-                <span class="text-sm text-slate-400 font-medium">Category:</span>
-                <select id="filterCategory" onchange="render()" class="bg-dark-900 border border-dark-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-indigo-500">
-                    <option value="All">All</option>
-                    <option value="Battle Pass">Battle Pass</option>
-                    <option value="Limited Mode">Limited Mode (LTM)</option>
-                    <option value="Event">In-Game Event</option>
-                    <option value="Bonus XP">Bonus XP Weekend</option>
-                </select>
+            <div id="eventCounter" class="text-xs font-semibold text-slate-400 bg-dark-900 px-3 py-1.5 rounded-lg border border-dark-700">
+                Showing 0 of 0 events
             </div>
         </div>
 
@@ -101,9 +113,7 @@
                     <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Category</label>
                     <select id="inputCategory" class="w-full bg-dark-900 border border-dark-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500">
                         <option value="Battle Pass">Battle Pass</option>
-                        <option value="Limited Mode">Limited Mode (LTM)</option>
-                        <option value="Event">In-Game Event</option>
-                        <option value="Bonus XP">Bonus XP Weekend</option>
+                        <option value="Event">Event</option>
                     </select>
                 </div>
                 <div class="grid grid-cols-2 gap-3">
@@ -117,14 +127,21 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Theme Color</label>
-                    <div class="flex items-center gap-3 mb-2">
-                        <button type="button" onclick="setPresetColor('#ef4444')" class="w-6 h-6 rounded-full bg-red-500 hover:scale-110 transition border border-white/20"></button>
-                        <button type="button" onclick="setPresetColor('#3b82f6')" class="w-6 h-6 rounded-full bg-blue-500 hover:scale-110 transition border border-white/20"></button>
-                        <button type="button" onclick="setPresetColor('#10b981')" class="w-6 h-6 rounded-full bg-emerald-500 hover:scale-110 transition border border-white/20"></button>
-                        <button type="button" onclick="setPresetColor('#a855f7')" class="w-6 h-6 rounded-full bg-purple-500 hover:scale-110 transition border border-white/20"></button>
-                        <button type="button" onclick="setPresetColor('#f59e0b')" class="w-6 h-6 rounded-full bg-amber-500 hover:scale-110 transition border border-white/20"></button>
-                        <button type="button" onclick="setPresetColor('#ec4899')" class="w-6 h-6 rounded-full bg-pink-500 hover:scale-110 transition border border-white/20"></button>
+                    <label class="block text-xs font-semibold text-slate-400 uppercase mb-1">Theme Color Palette</label>
+                    <!-- Google Docs style color grid -->
+                    <div class="bg-dark-900 p-2.5 rounded-xl border border-dark-700 mb-3 grid grid-cols-6 gap-2">
+                        <button type="button" onclick="setPresetColor('#ef4444')" class="w-full h-7 rounded-md bg-red-500 hover:scale-105 transition border border-white/25"></button>
+                        <button type="button" onclick="setPresetColor('#f97316')" class="w-full h-7 rounded-md bg-orange-500 hover:scale-105 transition border border-white/25"></button>
+                        <button type="button" onclick="setPresetColor('#f59e0b')" class="w-full h-7 rounded-md bg-amber-500 hover:scale-105 transition border border-white/25"></button>
+                        <button type="button" onclick="setPresetColor('#10b981')" class="w-full h-7 rounded-md bg-emerald-500 hover:scale-105 transition border border-white/25"></button>
+                        <button type="button" onclick="setPresetColor('#06b6d4')" class="w-full h-7 rounded-md bg-cyan-500 hover:scale-105 transition border border-white/25"></button>
+                        <button type="button" onclick="setPresetColor('#3b82f6')" class="w-full h-7 rounded-md bg-blue-500 hover:scale-105 transition border border-white/25"></button>
+                        <button type="button" onclick="setPresetColor('#6366f1')" class="w-full h-7 rounded-md bg-indigo-500 hover:scale-105 transition border border-white/25"></button>
+                        <button type="button" onclick="setPresetColor('#a855f7')" class="w-full h-7 rounded-md bg-purple-500 hover:scale-105 transition border border-white/25"></button>
+                        <button type="button" onclick="setPresetColor('#ec4899')" class="w-full h-7 rounded-md bg-pink-500 hover:scale-105 transition border border-white/25"></button>
+                        <button type="button" onclick="setPresetColor('#64748b')" class="w-full h-7 rounded-md bg-slate-500 hover:scale-105 transition border border-white/25"></button>
+                        <button type="button" onclick="setPresetColor('#e11d48')" class="w-full h-7 rounded-md bg-rose-600 hover:scale-105 transition border border-white/25"></button>
+                        <button type="button" onclick="setPresetColor('#14b8a6')" class="w-full h-7 rounded-md bg-teal-500 hover:scale-105 transition border border-white/25"></button>
                     </div>
                     <div class="flex items-center gap-3">
                         <input type="color" id="inputColor" value="#6366f1" class="w-12 h-10 bg-dark-900 border border-dark-700 rounded-lg cursor-pointer p-1">
@@ -159,9 +176,9 @@
 
         const INITIAL_EVENTS = [
             { id: '1', game: 'Apex Legends', title: 'Season Split Battle Pass', category: 'Battle Pass', startDate: '2026-06-01T10:00', endDate: '2026-10-01T23:59', color: '#ef4444', order: 0 },
-            { id: '2', game: 'Rainbow Six Siege', title: '3v3 Arcade LTM', category: 'Limited Mode', startDate: '2026-09-10T14:00', endDate: '2026-09-25T14:00', color: '#3b82f6', order: 1 },
+            { id: '2', game: 'Rainbow Six Siege', title: '3v3 Arcade LTM', category: 'Event', startDate: '2026-09-10T14:00', endDate: '2026-09-25T14:00', color: '#3b82f6', order: 1 },
             { id: '3', game: 'Dead by Daylight', title: '2v8 Chaos Mode', category: 'Event', startDate: '2026-09-15T11:00', endDate: '2026-09-30T23:59', color: '#a855f7', order: 2 },
-            { id: '4', game: 'Sea of Thieves', title: 'Community Weekend', category: 'Bonus XP', startDate: '2026-09-26T00:00', endDate: '2026-09-28T23:59', color: '#10b981', order: 3 }
+            { id: '4', game: 'Sea of Thieves', title: 'Community Weekend', category: 'Event', startDate: '2026-09-26T00:00', endDate: '2026-09-28T23:59', color: '#10b981', order: 3 }
         ];
 
         window.events = [];
@@ -308,8 +325,8 @@
                 <div>
                     <div class="flex justify-between items-start mb-3">
                         <div>
-                            <span class="text-xs font-bold uppercase px-2.5 py-1 rounded-md bg-dark-900 text-slate-300 border border-dark-700">${ev.game}</span>
-                            <span class="text-xs ml-2 text-slate-400 px-2 py-0.5 rounded bg-dark-700/50">${ev.category}</span>
+                            <span class="text-xs font-bold uppercase px-2.5 py-1 rounded-md bg-dark-900 border border-dark-700" style="color: ${ev.color}">${ev.game}</span>
+                            <span class="text-xs ml-2 px-2 py-0.5 rounded bg-dark-700/50 font-medium" style="color: ${ev.color}">${ev.category}</span>
                         </div>
                         <div class="flex items-center gap-1">
                             <div class="flex flex-col">
@@ -328,15 +345,15 @@
                         </div>
                         ${now > end ? '<div class="text-sm font-bold text-rose-400 py-1">Event Ended</div>' : `
                         <div class="grid grid-cols-4 gap-1 text-center font-mono">
-                            <div class="bg-dark-800 p-1.5 rounded-lg border border-dark-700"><div class="text-base font-bold" style="color: ${ev.color}">${d}</div><div class="text-[9px] text-slate-400">Days</div></div>
-                            <div class="bg-dark-800 p-1.5 rounded-lg border border-dark-700"><div class="text-base font-bold" style="color: ${ev.color}">${String(h).padStart(2,'0')}</div><div class="text-[9px] text-slate-400">Hrs</div></div>
-                            <div class="bg-dark-800 p-1.5 rounded-lg border border-dark-700"><div class="text-base font-bold" style="color: ${ev.color}">${String(m).padStart(2,'0')}</div><div class="text-[9px] text-slate-400">Mins</div></div>
-                            <div class="bg-dark-800 p-1.5 rounded-lg border border-dark-700"><div class="text-base font-bold" style="color: ${ev.color}">${String(s).padStart(2,'0')}</div><div class="text-[9px] text-slate-400">Secs</div></div>
+                            <div class="bg-dark-800 p-1.5 rounded-lg border border-dark-700"><div class="text-base font-bold text-white">${d}</div><div class="text-[9px] text-slate-400">Days</div></div>
+                            <div class="bg-dark-800 p-1.5 rounded-lg border border-dark-700"><div class="text-base font-bold text-white">${String(h).padStart(2,'0')}</div><div class="text-[9px] text-slate-400">Hrs</div></div>
+                            <div class="bg-dark-800 p-1.5 rounded-lg border border-dark-700"><div class="text-base font-bold text-white">${String(m).padStart(2,'0')}</div><div class="text-[9px] text-slate-400">Mins</div></div>
+                            <div class="bg-dark-800 p-1.5 rounded-lg border border-dark-700"><div class="text-base font-bold text-white">${String(s).padStart(2,'0')}</div><div class="text-[9px] text-slate-400">Secs</div></div>
                         </div>`}
                     </div>
                 </div>
                 <div>
-                    <div class="flex justify-between text-[11px] text-slate-400 mb-1"><span>Progress</span><span>${Math.round(prog)}%</span></div>
+                    <div class="flex justify-between text-[11px] text-slate-400 mb-1"><span>Progress</span><span style="color: ${ev.color}">${Math.round(prog)}%</span></div>
                     <div class="w-full bg-dark-900 h-2 rounded-full overflow-hidden border border-dark-700">
                         <div class="h-full" style="width: ${prog}%; background-color: ${ev.color}"></div>
                     </div>
@@ -347,7 +364,27 @@
         window.render = function() {
             const gameFilter = document.getElementById('filterGame').value;
             const catFilter = document.getElementById('filterCategory').value;
-            const filtered = window.events.filter(e => (gameFilter === 'All' || e.game === gameFilter) && (catFilter === 'All' || e.category === catFilter));
+            const statusFilter = document.getElementById('filterStatus').value;
+
+            const now = Date.now();
+
+            const filtered = window.events.filter(e => {
+                const matchGame = gameFilter === 'All' || e.game === gameFilter;
+                const matchCat = catFilter === 'All' || e.category === catFilter;
+                
+                const isLiveNow = now >= new Date(e.startDate).getTime() && now <= new Date(e.endDate).getTime();
+                const isUpcomingNow = now < new Date(e.startDate).getTime();
+                const isEndedNow = now > new Date(e.endDate).getTime();
+
+                let matchStatus = true;
+                if (statusFilter === 'Live') matchStatus = isLiveNow;
+                else if (statusFilter === 'Upcoming') matchStatus = isUpcomingNow;
+                else if (statusFilter === 'Ended') matchStatus = isEndedNow;
+
+                return matchGame && matchCat && matchStatus;
+            });
+
+            document.getElementById('eventCounter').innerText = `Showing ${filtered.length} of ${window.events.length} events`;
 
             const container = document.getElementById('mainView');
 
@@ -355,24 +392,23 @@
                 if (filtered.length === 0) {
                     container.innerHTML = `<div class="text-center py-20 bg-dark-800/40 rounded-2xl border border-dark-700"><i data-lucide="gamepad" class="w-12 h-12 text-slate-600 mx-auto mb-3"></i><h3 class="text-lg font-medium text-slate-300">No events found</h3></div>`;
                 } else {
-                    const now = Date.now();
                     const liveEvents = filtered.filter(e => now >= new Date(e.startDate).getTime() && now <= new Date(e.endDate).getTime());
                     const upcomingEvents = filtered.filter(e => now < new Date(e.startDate).getTime());
                     const endedEvents = filtered.filter(e => now > new Date(e.endDate).getTime());
 
                     let html = '';
                     if (liveEvents.length > 0) {
-                        html += `<div class="mb-8"><h2 class="text-xl font-bold text-emerald-400 mb-4 flex items-center gap-2"><i data-lucide="radio" class="w-5 h-5 animate-pulse"></i> Live Events (${liveEvents.length})</h2><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">`;
+                        html += `<div class="mb-8"><h2 class="text-xl font-bold text-emerald-400 mb-4 flex items-center gap-2"><i data-lucide="radio" class="w-5 h-5 animate-pulse"></i> Live Now</h2><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">`;
                         html += liveEvents.map(ev => renderEventCard(ev, filtered.indexOf(ev), filtered.length)).join('');
                         html += `</div></div>`;
                     }
                     if (upcomingEvents.length > 0) {
-                        html += `<div class="mb-8"><h2 class="text-xl font-bold text-amber-400 mb-4 flex items-center gap-2"><i data-lucide="clock" class="w-5 h-5"></i> Upcoming Events (${upcomingEvents.length})</h2><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">`;
+                        html += `<div class="mb-8"><h2 class="text-xl font-bold text-amber-400 mb-4 flex items-center gap-2"><i data-lucide="clock" class="w-5 h-5"></i> Upcoming</h2><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">`;
                         html += upcomingEvents.map(ev => renderEventCard(ev, filtered.indexOf(ev), filtered.length)).join('');
                         html += `</div></div>`;
                     }
                     if (endedEvents.length > 0) {
-                        html += `<div class="mb-8"><h2 class="text-xl font-bold text-slate-400 mb-4 flex items-center gap-2"><i data-lucide="check-circle-2" class="w-5 h-5"></i> Completed (${endedEvents.length})</h2><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">`;
+                        html += `<div class="mb-8"><h2 class="text-xl font-bold text-slate-400 mb-4 flex items-center gap-2"><i data-lucide="check-circle-2" class="w-5 h-5"></i> Ended</h2><div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">`;
                         html += endedEvents.map(ev => renderEventCard(ev, filtered.indexOf(ev), filtered.length)).join('');
                         html += `</div></div>`;
                     }
