@@ -25,12 +25,9 @@
         }
     </script>
 
-    <!-- React & ReactDOM -->
+    <!-- React 18 & ReactDOM UMD -->
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-    
-    <!-- Babel for JSX -->
-    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
     
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
@@ -40,20 +37,14 @@
     </style>
 </head>
 <body>
-    <!-- Isolated wrapper to protect React from browser extensions -->
-    <div id="react-app-container">
-        <div id="root"></div>
-    </div>
+    <div id="root"></div>
 
-    <!-- Firebase SDK Modular Imports via ESM CDN -->
+    <!-- Firebase SDK & App Logic -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
         import { getFirestore, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, onSnapshot, setDoc } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore.js";
 
-        // ==========================================
-        // PASTE YOUR FIREBASE CONFIGURATION HERE:
-        // ==========================================
-        // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+        // Your Firebase Configuration
         const firebaseConfig = {
             apiKey: "AIzaSyCoy6QjqZVkY5BGjDSUjObcWUixTbBKa6o",
             authDomain: "game-event-tracker-83c26.firebaseapp.com",
@@ -63,71 +54,18 @@
             appId: "1:158518711242:web:f1a20725007a1a4ad4b533",
             measurementId: "G-T2105PNB7N"
         };
-        
-        //const firebaseConfig = {
-            //apiKey: "YOUR_API_KEY",
-            //authDomain: "YOUR_AUTH_DOMAIN",
-            //projectId: "YOUR_PROJECT_ID",
-            //storageBucket: "YOUR_STORAGE_BUCKET",
-            //messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-            //appId: "YOUR_APP_ID"
-        //};
 
-        // Initialize Firebase
         const app = initializeApp(firebaseConfig);
         const db = getFirestore(app);
 
-        // Expose to window for React component
-        window.firebaseDB = { db, collection, getDocs, addDoc, updateDoc, deleteDoc, doc, onSnapshot, setDoc };
-        window.dispatchEvent(new Event('firebase-ready'));
-    </script>
-
-    <!-- React Application Script -->
-    <script type="text/babel">
-        const { useState, useEffect, useMemo } = React;
-
         const INITIAL_EVENTS = [
-            {
-                id: '1',
-                game: 'Apex Legends',
-                title: 'Season Split Battle Pass',
-                category: 'Battle Pass',
-                startDate: '2026-06-01T10:00',
-                endDate: '2026-10-01T23:59',
-                color: '#ef4444',
-                order: 0
-            },
-            {
-                id: '2',
-                game: 'Rainbow Six Siege',
-                title: '3v3 Arcade LTM',
-                category: 'Limited Mode',
-                startDate: '2026-09-10T14:00',
-                endDate: '2026-09-25T14:00',
-                color: '#3b82f6',
-                order: 1
-            },
-            {
-                id: '3',
-                game: 'Dead by Daylight',
-                title: '2v8 Chaos Mode',
-                category: 'Event',
-                startDate: '2026-09-15T11:00',
-                endDate: '2026-09-30T23:59',
-                color: '#a855f7',
-                order: 2
-            },
-            {
-                id: '4',
-                game: 'Sea of Thieves',
-                title: 'Community Weekend',
-                category: 'Bonus XP',
-                startDate: '2026-09-26T00:00',
-                endDate: '2026-09-28T23:59',
-                color: '#10b981',
-                order: 3
-            }
+            { id: '1', game: 'Apex Legends', title: 'Season Split Battle Pass', category: 'Battle Pass', startDate: '2026-06-01T10:00', endDate: '2026-10-01T23:59', color: '#ef4444', order: 0 },
+            { id: '2', game: 'Rainbow Six Siege', title: '3v3 Arcade LTM', category: 'Limited Mode', startDate: '2026-09-10T14:00', endDate: '2026-09-25T14:00', color: '#3b82f6', order: 1 },
+            { id: '3', game: 'Dead by Daylight', title: '2v8 Chaos Mode', category: 'Event', startDate: '2026-09-15T11:00', endDate: '2026-09-30T23:59', color: '#a855f7', order: 2 },
+            { id: '4', game: 'Sea of Thieves', title: 'Community Weekend', category: 'Bonus XP', startDate: '2026-09-26T00:00', endDate: '2026-09-28T23:59', color: '#10b981', order: 3 }
         ];
+
+        const { useState, useEffect, useMemo } = React;
 
         function App() {
             const [events, setEvents] = useState([]);
@@ -135,10 +73,8 @@
             const [selectedGame, setSelectedGame] = useState('All');
             const [selectedCategory, setSelectedCategory] = useState('All');
             const [isModalOpen, setIsModalOpen] = useState(false);
-            const [firebaseReady, setFirebaseReady] = useState(false);
             const [syncStatus, setSyncStatus] = useState('Connecting to cloud...');
 
-            // Form states
             const [game, setGame] = useState('');
             const [title, setTitle] = useState('');
             const [category, setCategory] = useState('Battle Pass');
@@ -147,48 +83,37 @@
             const [customColor, setCustomColor] = useState('#6366f1');
 
             useEffect(() => {
-                const handleReady = async () => {
-                    setFirebaseReady(true);
-                    const { db, collection, onSnapshot, getDocs, setDoc, doc } = window.firebaseDB;
-                    const colRef = collection(db, 'droptracker_events');
-
-                    try {
-                        const snapshot = await getDocs(colRef);
-                        if (snapshot.empty) {
-                            for (let ev of INITIAL_EVENTS) {
-                                await setDoc(doc(db, 'droptracker_events', ev.id), ev);
-                            }
+                const colRef = collection(db, 'droptracker_events');
+                
+                getDocs(colRef).then(async (snapshot) => {
+                    if (snapshot.empty) {
+                        for (let ev of INITIAL_EVENTS) {
+                            await setDoc(doc(db, 'droptracker_events', ev.id), ev);
                         }
-                    } catch (err) {
-                        console.error("Error seeding initial data:", err);
                     }
+                }).catch(err => console.error("Seed error:", err));
 
-                    onSnapshot(colRef, (snapshot) => {
-                        const loadedEvents = [];
-                        snapshot.forEach((docSnap) => {
-                            loadedEvents.push({ id: docSnap.id, ...docSnap.data() });
-                        });
-                        loadedEvents.sort((a, b) => (a.order || 0) - (b.order || 0));
-                        setEvents(loadedEvents);
-                        setSyncStatus('Live Sync Active 🟢');
-                    }, (error) => {
-                        console.error("Firestore sync error:", error);
-                        setSyncStatus('Sync Error (Check Config) 🔴');
+                const unsubscribe = onSnapshot(colRef, (snapshot) => {
+                    const loadedEvents = [];
+                    snapshot.forEach((docSnap) => {
+                        loadedEvents.push({ id: docSnap.id, ...docSnap.data() });
                     });
-                };
+                    loadedEvents.sort((a, b) => (a.order || 0) - (b.order || 0));
+                    setEvents(loadedEvents);
+                    setSyncStatus('Live Sync Active 🟢');
+                }, (error) => {
+                    console.error("Firestore error:", error);
+                    setSyncStatus('Sync Error 🔴');
+                });
 
-                if (window.firebaseDB) {
-                    handleReady();
-                } else {
-                    window.addEventListener('firebase-ready', handleReady);
-                }
+                return () => unsubscribe();
             }, []);
 
             useEffect(() => {
                 if (window.lucide) {
                     window.lucide.createIcons();
                 }
-            }, [events, view, isModalOpen, firebaseReady]);
+            });
 
             const handleAddEvent = async (e) => {
                 e.preventDefault();
@@ -204,11 +129,7 @@
                     order: events.length
                 };
 
-                if (firebaseReady && window.firebaseDB) {
-                    const { db, collection, addDoc } = window.firebaseDB;
-                    await addDoc(collection(db, 'droptracker_events'), newEvent);
-                }
-
+                await addDoc(collection(db, 'droptracker_events'), newEvent);
                 setGame('');
                 setTitle('');
                 setStartDate('');
@@ -217,10 +138,7 @@
             };
 
             const handleDeleteEvent = async (id) => {
-                if (firebaseReady && window.firebaseDB) {
-                    const { db, doc, deleteDoc } = window.firebaseDB;
-                    await deleteDoc(doc(db, 'droptracker_events', id));
-                }
+                await deleteDoc(doc(db, 'droptracker_events', id));
             };
 
             const handleMoveOrder = async (index, direction) => {
@@ -235,11 +153,8 @@
                 newEvents.sort((a, b) => a.order - b.order);
                 setEvents(newEvents);
 
-                if (firebaseReady && window.firebaseDB) {
-                    const { db, doc, updateDoc } = window.firebaseDB;
-                    await updateDoc(doc(db, 'droptracker_events', newEvents[index].id), { order: newEvents[index].order });
-                    await updateDoc(doc(db, 'droptracker_events', newEvents[targetIndex].id), { order: newEvents[targetIndex].order });
-                }
+                await updateDoc(doc(db, 'droptracker_events', newEvents[index].id), { order: newEvents[index].order });
+                await updateDoc(doc(db, 'droptracker_events', newEvents[targetIndex].id), { order: newEvents[targetIndex].order });
             };
 
             const gamesList = useMemo(() => ['All', ...new Set(events.map(e => e.game))], [events]);
@@ -253,177 +168,118 @@
                 });
             }, [events, selectedGame, selectedCategory]);
 
-            return (
-                <div className="min-h-screen bg-dark-900 text-slate-100 p-4 md:p-8">
-                    <div className="max-w-6xl mx-auto">
-                        
-                        <header className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4 bg-dark-800 p-6 rounded-2xl border border-dark-700 shadow-xl">
-                            <div>
-                                <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-400 to-pink-500 bg-clip-text text-transparent flex items-center gap-3">
-                                    <i data-lucide="gamepad-2" className="w-8 h-8 text-indigo-400"></i>
-                                    DropTracker PRO
-                                </h1>
-                                <p className="text-slate-400 text-sm mt-1">
-                                    Live multi-player battle pass & game event scheduler. <span className="text-xs px-2 py-0.5 bg-dark-700 rounded text-indigo-300 ml-2">{syncStatus}</span>
-                                </p>
-                            </div>
+            return React.createElement('div', { className: 'min-h-screen bg-dark-900 text-slate-100 p-4 md:p-8' },
+                React.createElement('div', { className: 'max-w-6xl mx-auto' },
+                    
+                    // Header
+                    React.createElement('header', { className: 'flex flex-col md:flex-row justify-between items-center mb-8 gap-4 bg-dark-800 p-6 rounded-2xl border border-dark-700 shadow-xl' },
+                        React.createElement('div', null,
+                            React.createElement('h1', { className: 'text-3xl font-extrabold tracking-tight bg-gradient-to-r from-indigo-400 to-pink-500 bg-clip-text text-transparent flex items-center gap-3' },
+                                React.createElement('i', { 'data-lucide': 'gamepad-2', className: 'w-8 h-8 text-indigo-400' }),
+                                'DropTracker PRO'
+                            ),
+                            React.createElement('p', { className: 'text-slate-400 text-sm mt-1' },
+                                'Live multi-player battle pass & game event scheduler. ',
+                                React.createElement('span', { className: 'text-xs px-2 py-0.5 bg-dark-700 rounded text-indigo-300 ml-2' }, syncStatus)
+                            )
+                        ),
+                        React.createElement('div', { className: 'flex items-center gap-3' },
+                            React.createElement('div', { className: 'bg-dark-900 p-1 rounded-xl flex border border-dark-700' },
+                                React.createElement('button', {
+                                    onClick: () => setView('timers'),
+                                    className: `px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ${view === 'timers' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`
+                                }, React.createElement('i', { 'data-lucide': 'clock', className: 'w-4 h-4' }), 'Timers'),
+                                React.createElement('button', {
+                                    onClick: () => setView('calendar'),
+                                    className: `px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ${view === 'calendar' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`
+                                }, React.createElement('i', { 'data-lucide': 'calendar', className: 'w-4 h-4' }), 'Calendar')
+                            ),
+                            React.createElement('button', {
+                                onClick: () => setIsModalOpen(true),
+                                className: 'bg-gradient-to-r from-indigo-500 to-pink-500 hover:from-indigo-600 hover:to-pink-600 text-white px-5 py-2.5 rounded-xl font-medium shadow-lg transition flex items-center gap-2'
+                            }, React.createElement('i', { 'data-lucide': 'plus', className: 'w-5 h-5' }), 'Add Event')
+                        )
+                    ),
 
-                            <div className="flex items-center gap-3">
-                                <div className="bg-dark-900 p-1 rounded-xl flex border border-dark-700">
-                                    <button 
-                                        onClick={() => setView('timers')}
-                                        className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ${view === 'timers' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}>
-                                        <i data-lucide="clock" className="w-4 h-4"></i> Timers
-                                    </button>
-                                    <button 
-                                        onClick={() => setView('calendar')}
-                                        className={`px-4 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2 ${view === 'calendar' ? 'bg-indigo-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}>
-                                        <i data-lucide="calendar" className="w-4 h-4"></i> Calendar
-                                    </button>
-                                </div>
+                    // Filters
+                    React.createElement('div', { className: 'flex flex-wrap gap-4 mb-6 bg-dark-800/60 p-4 rounded-xl border border-dark-700' },
+                        React.createElement('div', { className: 'flex items-center gap-2' },
+                            React.createElement('span', { className: 'text-sm text-slate-400 font-medium' }, 'Game:'),
+                            React.createElement('select', {
+                                value: selectedGame,
+                                onChange: (e) => setSelectedGame(e.target.value),
+                                className: 'bg-dark-900 border border-dark-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-indigo-500'
+                            }, gamesList.map(g => React.createElement('option', { key: g, value: g }, g)))
+                        ),
+                        React.createElement('div', { className: 'flex items-center gap-2' },
+                            React.createElement('span', { className: 'text-sm text-slate-400 font-medium' }, 'Category:'),
+                            React.createElement('select', {
+                                value: selectedCategory,
+                                onChange: (e) => setSelectedCategory(e.target.value),
+                                className: 'bg-dark-900 border border-dark-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-indigo-500'
+                            }, categoriesList.map(c => React.createElement('option', { key: c, value: c }, c)))
+                        )
+                    ),
 
-                                <button 
-                                    onClick={() => setIsModalOpen(true)}
-                                    className="bg-gradient-to-r from-indigo-500 to-pink-500 hover:from-indigo-600 hover:to-pink-600 text-white px-5 py-2.5 rounded-xl font-medium shadow-lg transition flex items-center gap-2">
-                                    <i data-lucide="plus" className="w-5 h-5"></i> Add Event
-                                </button>
-                            </div>
-                        </header>
+                    // Main Views
+                    view === 'timers' 
+                        ? React.createElement(TimerDashboard, { events: filteredEvents, onDelete: handleDeleteEvent, onMove: handleMoveOrder })
+                        : React.createElement(CalendarView, { events: filteredEvents }),
 
-                        <div className="flex flex-wrap gap-4 mb-6 bg-dark-800/60 p-4 rounded-xl border border-dark-700">
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm text-slate-400 font-medium">Game:</span>
-                                <select 
-                                    value={selectedGame} 
-                                    onChange={(e) => setSelectedGame(e.target.value)}
-                                    className="bg-dark-900 border border-dark-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-indigo-500">
-                                    {gamesList.map(g => <option key={g} value={g}>{g}</option>)}
-                                </select>
-                            </div>
-
-                            <div className="flex items-center gap-2">
-                                <span className="text-sm text-slate-400 font-medium">Category:</span>
-                                <select 
-                                    value={selectedCategory} 
-                                    onChange={(e) => setSelectedCategory(e.target.value)}
-                                    className="bg-dark-900 border border-dark-700 text-slate-200 text-sm rounded-lg px-3 py-1.5 focus:outline-none focus:border-indigo-500">
-                                    {categoriesList.map(c => <option key={c} value={c}>{c}</option>)}
-                                </select>
-                            </div>
-                        </div>
-
-                        {view === 'timers' ? (
-                            <TimerDashboard events={filteredEvents} onDelete={handleDeleteEvent} onMove={handleMoveOrder} />
-                        ) : (
-                            <CalendarView events={filteredEvents} />
-                        )}
-
-                        {isModalOpen && (
-                            <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-                                <div className="bg-dark-800 border border-dark-700 rounded-2xl w-full max-w-md p-6 shadow-2xl">
-                                    <div className="flex justify-between items-center mb-4">
-                                        <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                                            <i data-lucide="calendar-plus" className="w-5 h-5 text-indigo-400"></i> Add New Event / Pass
-                                        </h2>
-                                        <button onClick={() => setIsModalOpen(false)} className="text-slate-400 hover:text-white">
-                                            <i data-lucide="x" className="w-5 h-5"></i>
-                                        </button>
-                                    </div>
-
-                                    <form onSubmit={handleAddEvent} className="space-y-4">
-                                        <div>
-                                            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Game Name</label>
-                                            <input 
-                                                type="text" 
-                                                required
-                                                placeholder="e.g. Apex Legends, Valorant"
-                                                value={game} 
-                                                onChange={(e) => setGame(e.target.value)}
-                                                className="w-full bg-dark-900 border border-dark-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500" 
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Event / Battle Pass Title</label>
-                                            <input 
-                                                type="text" 
-                                                required
-                                                placeholder="e.g. Season Split 2, 3v3 LTM"
-                                                value={title} 
-                                                onChange={(e) => setTitle(e.target.value)}
-                                                className="w-full bg-dark-900 border border-dark-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500" 
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Category</label>
-                                            <select 
-                                                value={category} 
-                                                onChange={(e) => setCategory(e.target.value)}
-                                                className="w-full bg-dark-900 border border-dark-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500">
-                                                <option value="Battle Pass">Battle Pass</option>
-                                                <option value="Limited Mode">Limited Mode (LTM)</option>
-                                                <option value="Event">In-Game Event</option>
-                                                <option value="Bonus XP">Bonus XP Weekend</option>
-                                            </select>
-                                        </div>
-
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div>
-                                                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Start Date & Time</label>
-                                                <input 
-                                                    type="datetime-local" 
-                                                    required
-                                                    value={startDate} 
-                                                    onChange={(e) => setStartDate(e.target.value)}
-                                                    className="w-full bg-dark-900 border border-dark-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500" 
-                                                />
-                                            </div>
-                                            <div>
-                                                <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">End Date & Time</label>
-                                                <input 
-                                                    type="datetime-local" 
-                                                    required
-                                                    value={endDate} 
-                                                    onChange={(e) => setEndDate(e.target.value)}
-                                                    className="w-full bg-dark-900 border border-dark-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-indigo-500" 
-                                                />
-                                            </div>
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">Theme Color</label>
-                                            <div className="flex items-center gap-3">
-                                                <input 
-                                                    type="color" 
-                                                    value={customColor} 
-                                                    onChange={(e) => setCustomColor(e.target.value)}
-                                                    className="w-12 h-10 bg-dark-900 border border-dark-700 rounded-lg cursor-pointer p-1"
-                                                />
-                                                <span className="text-sm font-mono text-slate-300">{customColor}</span>
-                                            </div>
-                                        </div>
-
-                                        <div className="flex justify-end gap-3 pt-4">
-                                            <button 
-                                                type="button" 
-                                                onClick={() => setIsModalOpen(false)}
-                                                className="px-4 py-2 rounded-xl text-sm font-medium bg-dark-700 text-slate-300 hover:bg-dark-600 transition">
-                                                Cancel
-                                            </button>
-                                            <button 
-                                                type="submit" 
-                                                className="px-5 py-2 rounded-xl text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-500 transition shadow-lg">
-                                                Save Event
-                                            </button>
-                                        </div>
-                                    </form>
-                                </div>
-                            </div>
-                        )}
-
-                    </div>
-                </div>
+                    // Modal
+                    isModalOpen && React.createElement('div', { className: 'fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50' },
+                        React.createElement('div', { className: 'bg-dark-800 border border-dark-700 rounded-2xl w-full max-w-md p-6 shadow-2xl' },
+                            React.createElement('div', { className: 'flex justify-between items-center mb-4' },
+                                React.createElement('h2', { className: 'text-xl font-bold text-white flex items-center gap-2' },
+                                    React.createElement('i', { 'data-lucide': 'calendar-plus', className: 'w-5 h-5 text-indigo-400' }), 'Add New Event'
+                                ),
+                                React.createElement('button', { onClick: () => setIsModalOpen(false), className: 'text-slate-400 hover:text-white' },
+                                    React.createElement('i', { 'data-lucide': 'x', className: 'w-5 h-5' })
+                                )
+                            ),
+                            React.createElement('form', { onSubmit: handleAddEvent, className: 'space-y-4' },
+                                React.createElement('div', null,
+                                    React.createElement('label', { className: 'block text-xs font-semibold text-slate-400 uppercase mb-1' }, 'Game Name'),
+                                    React.createElement('input', { type: 'text', required: true, placeholder: 'e.g. Apex Legends', value: game, onChange: (e) => setGame(e.target.value), className: 'w-full bg-dark-900 border border-dark-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500' })
+                                ),
+                                React.createElement('div', null,
+                                    React.createElement('label', { className: 'block text-xs font-semibold text-slate-400 uppercase mb-1' }, 'Title'),
+                                    React.createElement('input', { type: 'text', required: true, placeholder: 'e.g. Season Split 2', value: title, onChange: (e) => setTitle(e.target.value), className: 'w-full bg-dark-900 border border-dark-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500' })
+                                ),
+                                React.createElement('div', null,
+                                    React.createElement('label', { className: 'block text-xs font-semibold text-slate-400 uppercase mb-1' }, 'Category'),
+                                    React.createElement('select', { value: category, onChange: (e) => setCategory(e.target.value), className: 'w-full bg-dark-900 border border-dark-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500' },
+                                        React.createElement('option', { value: 'Battle Pass' }, 'Battle Pass'),
+                                        React.createElement('option', { value: 'Limited Mode' }, 'Limited Mode (LTM)'),
+                                        React.createElement('option', { value: 'Event' }, 'In-Game Event'),
+                                        React.createElement('option', { value: 'Bonus XP' }, 'Bonus XP Weekend')
+                                    )
+                                ),
+                                React.createElement('div', { className: 'grid grid-cols-2 gap-3' },
+                                    React.createElement('div', null,
+                                        React.createElement('label', { className: 'block text-xs font-semibold text-slate-400 uppercase mb-1' }, 'Start'),
+                                        React.createElement('input', { type: 'datetime-local', required: true, value: startDate, onChange: (e) => setStartDate(e.target.value), className: 'w-full bg-dark-900 border border-dark-700 rounded-xl px-3 py-2 text-xs text-white' })
+                                    ),
+                                    React.createElement('div', null,
+                                        React.createElement('label', { className: 'block text-xs font-semibold text-slate-400 uppercase mb-1' }, 'End'),
+                                        React.createElement('input', { type: 'datetime-local', required: true, value: endDate, onChange: (e) => setEndDate(e.target.value), className: 'w-full bg-dark-900 border border-dark-700 rounded-xl px-3 py-2 text-xs text-white' })
+                                    )
+                                ),
+                                React.createElement('div', null,
+                                    React.createElement('label', { className: 'block text-xs font-semibold text-slate-400 uppercase mb-1' }, 'Theme Color'),
+                                    React.createElement('div', { className: 'flex items-center gap-3' },
+                                        React.createElement('input', { type: 'color', value: customColor, onChange: (e) => setCustomColor(e.target.value), className: 'w-12 h-10 bg-dark-900 border border-dark-700 rounded-lg cursor-pointer p-1' }),
+                                        React.createElement('span', { className: 'text-sm font-mono text-slate-300' }, customColor)
+                                    )
+                                ),
+                                React.createElement('div', { className: 'flex justify-end gap-3 pt-4' },
+                                    React.createElement('button', { type: 'button', onClick: () => setIsModalOpen(false), className: 'px-4 py-2 rounded-xl text-sm font-medium bg-dark-700 text-slate-300 hover:bg-dark-600' }, 'Cancel'),
+                                    React.createElement('button', { type: 'submit', className: 'px-5 py-2 rounded-xl text-sm font-medium bg-indigo-600 text-white hover:bg-indigo-500 shadow-lg' }, 'Save Event')
+                                )
+                            )
+                        )
+                    )
+                )
             );
         }
 
@@ -436,228 +292,134 @@
             }, []);
 
             if (events.length === 0) {
-                return (
-                    <div className="text-center py-20 bg-dark-800/40 rounded-2xl border border-dark-700">
-                        <i data-lucide="gamepad" className="w-12 h-12 text-slate-600 mx-auto mb-3"></i>
-                        <h3 className="text-lg font-medium text-slate-300">No events found</h3>
-                        <p className="text-sm text-slate-500 mt-1">Add a new event or clear your filters.</p>
-                    </div>
+                return React.createElement('div', { className: 'text-center py-20 bg-dark-800/40 rounded-2xl border border-dark-700' },
+                    React.createElement('i', { 'data-lucide': 'gamepad', className: 'w-12 h-12 text-slate-600 mx-auto mb-3' }),
+                    React.createElement('h3', { className: 'text-lg font-medium text-slate-300' }, 'No events found')
                 );
             }
 
-            return (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {events.map((ev, index) => {
-                        const now = new Date().getTime();
-                        const start = new Date(ev.startDate).getTime();
-                        const end = new Date(ev.endDate).getTime();
-                        
-                        let statusText = '';
-                        let timeLeft = 0;
-                        let isLive = false;
-                        let progress = 0;
+            return React.createElement('div', { className: 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6' },
+                events.map((ev, index) => {
+                    const now = new Date().getTime();
+                    const start = new Date(ev.startDate).getTime();
+                    const end = new Date(ev.endDate).getTime();
+                    
+                    let statusText = '';
+                    let timeLeft = 0;
+                    let isLive = false;
+                    let progress = 0;
 
-                        if (now < start) {
-                            statusText = 'Starts In';
-                            timeLeft = start - now;
-                            isLive = false;
-                            progress = 0;
-                        } else if (now >= start && now <= end) {
-                            statusText = 'Ends In';
-                            timeLeft = end - now;
-                            isLive = true;
-                            progress = Math.min(100, Math.max(0, ((now - start) / (end - start)) * 100));
-                        } else {
-                            statusText = 'Event Ended';
-                            timeLeft = 0;
-                            isLive = false;
-                            progress = 100;
-                        }
+                    if (now < start) {
+                        statusText = 'Starts In';
+                        timeLeft = start - now;
+                        progress = 0;
+                    } else if (now >= start && now <= end) {
+                        statusText = 'Ends In';
+                        timeLeft = end - now;
+                        isLive = true;
+                        progress = Math.min(100, Math.max(0, ((now - start) / (end - start)) * 100));
+                    } else {
+                        statusText = 'Event Ended';
+                        progress = 100;
+                    }
 
-                        const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
-                        const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-                        const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
-                        const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
+                    const days = Math.floor(timeLeft / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((timeLeft % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((timeLeft % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((timeLeft % (1000 * 60)) / 1000);
 
-                        return (
-                            <div 
-                                key={ev.id} 
-                                className="bg-dark-800 border border-dark-700 rounded-2xl p-5 shadow-xl relative overflow-hidden flex flex-col justify-between transition hover:border-dark-600"
-                                style={{ borderTop: `4px solid ${ev.color}` }}>
-                                
-                                <div>
-                                    <div className="flex justify-between items-start mb-3">
-                                        <div>
-                                            <span className="text-xs font-bold uppercase tracking-wider px-2.5 py-1 rounded-md bg-dark-900 text-slate-300 border border-dark-700">
-                                                {ev.game}
-                                            </span>
-                                            <span className="text-xs ml-2 text-slate-400 px-2 py-0.5 rounded bg-dark-700/50">
-                                                {ev.category}
-                                            </span>
-                                        </div>
-
-                                        <div className="flex items-center gap-1">
-                                            <div className="flex flex-col">
-                                                <button onClick={() => onMove(index, 'up')} disabled={index === 0} className="text-slate-500 hover:text-white disabled:opacity-30">
-                                                    <i data-lucide="chevron-up" className="w-4 h-4"></i>
-                                                </button>
-                                                <button onClick={() => onMove(index, 'down')} disabled={index === events.length - 1} className="text-slate-500 hover:text-white disabled:opacity-30">
-                                                    <i data-lucide="chevron-down" className="w-4 h-4"></i>
-                                                </button>
-                                            </div>
-                                            <button 
-                                                onClick={() => onDelete(ev.id)}
-                                                className="text-slate-500 hover:text-rose-400 p-1.5 transition">
-                                                <i data-lucide="trash-2" className="w-4 h-4"></i>
-                                            </button>
-                                        </div>
-                                    </div>
-
-                                    <h3 className="text-lg font-bold text-white mb-2">{ev.title}</h3>
-
-                                    <div className="bg-dark-900/80 rounded-xl p-3 border border-dark-700/60 my-3">
-                                        <div className="flex justify-between items-center mb-1">
-                                            <span className={`text-xs font-semibold uppercase ${isLive ? 'text-emerald-400' : 'text-amber-400'}`}>
-                                                {statusText}
-                                            </span>
-                                            <span className="text-[10px] text-slate-500">
-                                                {new Date(ev.startDate).toLocaleDateString()} - {new Date(ev.endDate).toLocaleDateString()}
-                                            </span>
-                                        </div>
-
-                                        {now > end ? (
-                                            <div className="text-sm font-bold text-rose-400 py-1">Event Completed</div>
-                                        ) : (
-                                            <div className="grid grid-cols-4 gap-1 text-center font-mono">
-                                                <div className="bg-dark-800 p-1.5 rounded-lg border border-dark-700">
-                                                    <div className="text-base font-bold text-white">{days}</div>
-                                                    <div className="text-[9px] text-slate-400 uppercase">Days</div>
-                                                </div>
-                                                <div className="bg-dark-800 p-1.5 rounded-lg border border-dark-700">
-                                                    <div className="text-base font-bold text-white">{String(hours).padStart(2, '0')}</div>
-                                                    <div className="text-[9px] text-slate-400 uppercase">Hrs</div>
-                                                </div>
-                                                <div className="bg-dark-800 p-1.5 rounded-lg border border-dark-700">
-                                                    <div className="text-base font-bold text-white">{String(minutes).padStart(2, '0')}</div>
-                                                    <div className="text-[9px] text-slate-400 uppercase">Mins</div>
-                                                </div>
-                                                <div className="bg-dark-800 p-1.5 rounded-lg border border-dark-700">
-                                                    <div className="text-base font-bold text-white">{String(seconds).padStart(2, '0')}</div>
-                                                    <div className="text-[9px] text-slate-400 uppercase">Secs</div>
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-                                </div>
-
-                                <div>
-                                    <div className="flex justify-between text-[11px] text-slate-400 mb-1">
-                                        <span>Progress</span>
-                                        <span>{Math.round(progress)}%</span>
-                                    </div>
-                                    <div className="w-full bg-dark-900 h-2 rounded-full overflow-hidden border border-dark-700">
-                                        <div 
-                                            className="h-full transition-all duration-500" 
-                                            style={{ width: `${progress}%`, backgroundColor: ev.color }}>
-                                        </div>
-                                    </div>
-                                </div>
-
-                            </div>
-                        );
-                    })}
-                </div>
+                    return React.createElement('div', {
+                        key: ev.id,
+                        className: 'bg-dark-800 border border-dark-700 rounded-2xl p-5 shadow-xl flex flex-col justify-between',
+                        style: { borderTop: `4px solid ${ev.color}` }
+                    },
+                        React.createElement('div', null,
+                            React.createElement('div', { className: 'flex justify-between items-start mb-3' },
+                                React.createElement('div', null,
+                                    React.createElement('span', { className: 'text-xs font-bold uppercase px-2.5 py-1 rounded-md bg-dark-900 text-slate-300 border border-dark-700' }, ev.game),
+                                    React.createElement('span', { className: 'text-xs ml-2 text-slate-400 px-2 py-0.5 rounded bg-dark-700/50' }, ev.category)
+                                ),
+                                React.createElement('div', { className: 'flex items-center gap-1' },
+                                    React.createElement('div', { className: 'flex flex-col' },
+                                        React.createElement('button', { onClick: () => onMove(index, 'up'), disabled: index === 0, className: 'text-slate-500 hover:text-white disabled:opacity-30' }, React.createElement('i', { 'data-lucide': 'chevron-up', className: 'w-4 h-4' })),
+                                        React.createElement('button', { onClick: () => onMove(index, 'down'), disabled: index === events.length - 1, className: 'text-slate-500 hover:text-white disabled:opacity-30' }, React.createElement('i', { 'data-lucide': 'chevron-down', className: 'w-4 h-4' }))
+                                    ),
+                                    React.createElement('button', { onClick: () => onDelete(ev.id), className: 'text-slate-500 hover:text-rose-400 p-1.5' }, React.createElement('i', { 'data-lucide': 'trash-2', className: 'w-4 h-4' }))
+                                )
+                            ),
+                            React.createElement('h3', { className: 'text-lg font-bold text-white mb-2' }, ev.title),
+                            React.createElement('div', { className: 'bg-dark-900/80 rounded-xl p-3 border border-dark-700/60 my-3' },
+                                React.createElement('div', { className: 'flex justify-between items-center mb-1' },
+                                    React.createElement('span', { className: `text-xs font-semibold uppercase ${isLive ? 'text-emerald-400' : 'text-amber-400'}` }, statusText),
+                                    React.createElement('span', { className: 'text-[10px] text-slate-500' }, `${new Date(ev.startDate).toLocaleDateString()} - ${new Date(ev.endDate).toLocaleDateString()}`)
+                                ),
+                                now > end ? React.createElement('div', { className: 'text-sm font-bold text-rose-400 py-1' }, 'Completed') :
+                                React.createElement('div', { className: 'grid grid-cols-4 gap-1 text-center font-mono' },
+                                    React.createElement('div', { className: 'bg-dark-800 p-1.5 rounded-lg border border-dark-700' }, React.createElement('div', { className: 'text-base font-bold text-white' }, days), React.createElement('div', { className: 'text-[9px] text-slate-400 uppercase' }, 'Days')),
+                                    React.createElement('div', { className: 'bg-dark-800 p-1.5 rounded-lg border border-dark-700' }, React.createElement('div', { className: 'text-base font-bold text-white' }, String(hours).padStart(2, '0')), React.createElement('div', { className: 'text-[9px] text-slate-400 uppercase' }, 'Hrs')),
+                                    React.createElement('div', { className: 'bg-dark-800 p-1.5 rounded-lg border border-dark-700' }, React.createElement('div', { className: 'text-base font-bold text-white' }, String(minutes).padStart(2, '0')), React.createElement('div', { className: 'text-[9px] text-slate-400 uppercase' }, 'Mins')),
+                                    React.createElement('div', { className: 'bg-dark-800 p-1.5 rounded-lg border border-dark-700' }, React.createElement('div', { className: 'text-base font-bold text-white' }, String(seconds).padStart(2, '0')), React.createElement('div', { className: 'text-[9px] text-slate-400 uppercase' }, 'Secs'))
+                                )
+                            )
+                        ),
+                        React.createElement('div', null,
+                            React.createElement('div', { className: 'flex justify-between text-[11px] text-slate-400 mb-1' }, React.createElement('span', null, 'Progress'), React.createElement('span', null, `${Math.round(progress)}%`)),
+                            React.createElement('div', { className: 'w-full bg-dark-900 h-2 rounded-full overflow-hidden border border-dark-700' },
+                                React.createElement('div', { className: 'h-full transition-all duration-500', style: { width: `${progress}%`, backgroundColor: ev.color } })
+                            )
+                        )
+                    );
+                })
             );
         }
 
         function CalendarView({ events }) {
             const [currentDate, setCurrentDate] = useState(new Date());
-
             const year = currentDate.getFullYear();
             const month = currentDate.getMonth();
-
             const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
             const firstDayIndex = new Date(year, month, 1).getDay();
             const daysInMonth = new Date(year, month + 1, 0).getDate();
 
             const calendarDays = [];
-            for (let i = 0; i < firstDayIndex; i++) {
-                calendarDays.push(null);
-            }
-            for (let d = 1; d <= daysInMonth; d++) {
-                calendarDays.push(new Date(year, month, d));
-            }
+            for (let i = 0; i < firstDayIndex; i++) calendarDays.push(null);
+            for (let d = 1; d <= daysInMonth; d++) calendarDays.push(new Date(year, month, d));
 
-            const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
-            const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
+            return React.createElement('div', { className: 'bg-dark-800 border border-dark-700 rounded-2xl p-6 shadow-xl' },
+                React.createElement('div', { className: 'flex justify-between items-center mb-6' },
+                    React.createElement('h2', { className: 'text-xl font-bold text-white flex items-center gap-2' },
+                        React.createElement('i', { 'data-lucide': 'calendar', className: 'w-5 h-5 text-indigo-400' }), `${monthNames[month]} ${year}`
+                    ),
+                    React.createElement('div', { className: 'flex gap-2' },
+                        React.createElement('button', { onClick: () => setCurrentDate(new Date(year, month - 1, 1)), className: 'p-2 bg-dark-900 border border-dark-700 rounded-xl hover:bg-dark-700' }, React.createElement('i', { 'data-lucide': 'chevron-left', className: 'w-4 h-4' })),
+                        React.createElement('button', { onClick: () => setCurrentDate(new Date(year, month + 1, 1)), className: 'p-2 bg-dark-900 border border-dark-700 rounded-xl hover:bg-dark-700' }, React.createElement('i', { 'data-lucide': 'chevron-right', className: 'w-4 h-4' }))
+                    )
+                ),
+                React.createElement('div', { className: 'grid grid-cols-7 gap-2 mb-2 text-center' },
+                    ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => React.createElement('div', { key: day, className: 'text-xs font-bold text-slate-400 uppercase py-1' }, day))
+                ),
+                React.createElement('div', { className: 'grid grid-cols-7 gap-2' },
+                    calendarDays.map((dateObj, idx) => {
+                        if (!dateObj) return React.createElement('div', { key: `empty-${idx}`, className: 'h-28 bg-dark-900/30 rounded-xl' });
+                        const dayStr = dateObj.toISOString().split('T')[0];
+                        const dayEvents = events.filter(ev => dayStr >= ev.startDate.split('T')[0] && dayStr <= ev.endDate.split('T')[0]);
+                        const isToday = new Date().toISOString().split('T')[0] === dayStr;
 
-            return (
-                <div className="bg-dark-800 border border-dark-700 rounded-2xl p-6 shadow-xl">
-                    <div className="flex justify-between items-center mb-6">
-                        <h2 className="text-xl font-bold text-white flex items-center gap-2">
-                            <i data-lucide="calendar" className="w-5 h-5 text-indigo-400"></i>
-                            {monthNames[month]} {year}
-                        </h2>
-                        <div className="flex gap-2">
-                            <button onClick={prevMonth} className="p-2 bg-dark-900 border border-dark-700 rounded-xl hover:bg-dark-700 transition">
-                                <i data-lucide="chevron-left" className="w-4 h-4"></i>
-                            </button>
-                            <button onClick={nextMonth} className="p-2 bg-dark-900 border border-dark-700 rounded-xl hover:bg-dark-700 transition">
-                                <i data-lucide="chevron-right" className="w-4 h-4"></i>
-                            </button>
-                        </div>
-                    </div>
-
-                    <div className="grid grid-cols-7 gap-2 mb-2 text-center">
-                        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(day => (
-                            <div key={day} className="text-xs font-bold text-slate-400 uppercase py-1">{day}</div>
-                        ))}
-                    </div>
-
-                    <div className="grid grid-cols-7 gap-2">
-                        {calendarDays.map((dateObj, idx) => {
-                            if (!dateObj) {
-                                return <div key={`empty-${idx}`} className="h-28 bg-dark-900/30 rounded-xl border border-transparent"></div>;
-                            }
-
-                            const dayStr = dateObj.toISOString().split('T')[0];
-                            
-                            const dayEvents = events.filter(ev => {
-                                const startStr = ev.startDate.split('T')[0];
-                                const endStr = ev.endDate.split('T')[0];
-                                return dayStr >= startStr && dayStr <= endStr;
-                            });
-
-                            const isToday = new Date().toISOString().split('T')[0] === dayStr;
-
-                            return (
-                                <div 
-                                    key={dayStr} 
-                                    className={`h-28 bg-dark-900/70 border rounded-xl p-2 flex flex-col overflow-y-auto ${isToday ? 'border-indigo-500 ring-1 ring-indigo-500' : 'border-dark-700'}`}>
-                                    <div className="text-right text-xs font-semibold text-slate-400 mb-1">
-                                        {dateObj.getDate()}
-                                    </div>
-                                    <div className="space-y-1 flex-1">
-                                        {dayEvents.map(ev => (
-                                            <div 
-                                                key={ev.id}
-                                                title={`${ev.game}: ${ev.title}`}
-                                                className="text-[10px] px-1.5 py-0.5 rounded truncate font-medium text-white shadow"
-                                                style={{ backgroundColor: ev.color }}>
-                                                <span className="opacity-75 font-normal">{ev.game}:</span> {ev.title}
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                            );
-                        })}
-                    </div>
-                </div>
+                        return React.createElement('div', { key: dayStr, className: `h-28 bg-dark-900/70 border rounded-xl p-2 flex flex-col overflow-y-auto ${isToday ? 'border-indigo-500 ring-1 ring-indigo-500' : 'border-dark-700'}` },
+                            React.createElement('div', { className: 'text-right text-xs font-semibold text-slate-400 mb-1' }, dateObj.getDate()),
+                            React.createElement('div', { className: 'space-y-1 flex-1' },
+                                dayEvents.map(ev => React.createElement('div', { key: ev.id, title: `${ev.game}: ${ev.title}`, className: 'text-[10px] px-1.5 py-0.5 rounded truncate font-medium text-white shadow', style: { backgroundColor: ev.color } },
+                                    React.createElement('span', { className: 'opacity-75' }, `${ev.game}: `), ev.title
+                                ))
+                            )
+                        );
+                    })
+                )
             );
         }
 
-        ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+        ReactDOM.createRoot(document.getElementById('root')).render(React.createElement(App));
     </script>
 </body>
 </html>
